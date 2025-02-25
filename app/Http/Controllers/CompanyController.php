@@ -28,12 +28,13 @@ class CompanyController extends Controller
             'website' => 'required|url|unique:companies',
         ]);
 
-        $logoPath = $request->file('logo') ? $request->file('logo')->store('public/logos') : null;
+        
+        $logoPath = $request->file('logo') ? $request->file('logo')->store('logos', 'public') : null;
 
         Company::create([
             'name' => $request->name,
             'email' => $request->email,
-            'logo' => $logoPath,
+            'logo' => $logoPath, 
             'website' => $request->website,
         ]);
 
@@ -60,8 +61,12 @@ class CompanyController extends Controller
         ]);
 
         if ($request->hasFile('logo')) {
-            Storage::delete($company->logo);
-            $company->logo = $request->file('logo')->store('public/logos');
+           
+            if ($company->logo) {
+                Storage::delete('public/' . $company->logo);
+            }
+            
+            $company->logo = $request->file('logo')->store('logos', 'public');
         }
 
         $company->update($request->only(['name', 'email', 'website']));
@@ -71,9 +76,10 @@ class CompanyController extends Controller
 
     public function destroy(Company $company)
     {
-        Storage::delete($company->logo);
+        if ($company->logo) {
+            Storage::delete('public/' . $company->logo);
+        }
         $company->delete();
         return redirect()->route('companies.index');
     }
 }
-
